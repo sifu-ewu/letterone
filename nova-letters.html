@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>For You</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #e8e0d5;
+    --ink-dim: #a09488;
+    --ink-faint: #5a5048;
+    --paper: #0d0b09;
+    --paper-2: #141210;
+    --paper-3: #1c1915;
+    --gold: #c9a96e;
+    --gold-dim: #7a6040;
+    --red: #8b2635;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    overflow: hidden;
+  }
+
+  /* ── STAR CANVAS ── */
+  #stars {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    position: fixed; inset: 0; z-index: 10;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2rem 1.5rem;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+    pointer-events: none;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── OPENING ── */
+  #screen-open {
+    text-align: center;
+    gap: 2rem;
+  }
+  .open-label {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: clamp(0.8rem, 3vw, 0.95rem);
+    letter-spacing: 0.18em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+  .open-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(2.8rem, 12vw, 4.5rem);
+    line-height: 1.1;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .open-title em {
+    font-style: italic;
+    color: var(--gold);
+  }
+  .open-sub {
+    font-size: clamp(0.85rem, 3.5vw, 1rem);
+    color: var(--ink-dim);
+    font-style: italic;
+    line-height: 1.7;
+    max-width: 280px;
+  }
+  .open-btn {
+    margin-top: 1rem;
+    background: none;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+    padding: 0.75rem 2.2rem;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: border-color 0.3s, color 0.3s, background 0.3s;
+    border-radius: 2px;
+  }
+  .open-btn:hover {
+    border-color: var(--gold);
+    background: rgba(201,169,110,0.07);
+  }
+
+  /* ── LETTER SCREEN ── */
+  #screen-letter {
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .letter-header {
+    width: 100%;
+    padding: 1.2rem 1.5rem 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(201,169,110,0.12);
+    flex-shrink: 0;
+  }
+  .letter-num {
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    letter-spacing: 0.12em;
+  }
+  .letter-dots {
+    display: flex; gap: 6px;
+  }
+  .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    border: 1px solid var(--gold-dim);
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .dot.active { background: var(--gold); border-color: var(--gold); }
+
+  .letter-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 2rem 1.5rem 1.5rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .letter-body::-webkit-scrollbar { display: none; }
+
+  .letter-salutation {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.1rem, 4.5vw, 1.4rem);
+    color: var(--gold);
+    margin-bottom: 1.4rem;
+    display: block;
+  }
+
+  .letter-text {
+    font-size: clamp(1rem, 4vw, 1.15rem);
+    font-weight: 300;
+    line-height: 1.85;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .letter-text .char {
+    opacity: 0;
+    transition: opacity 0.04s ease;
+  }
+  .letter-text .char.shown { opacity: 1; }
+
+  .letter-signature {
+    margin-top: 2rem;
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: clamp(0.9rem, 3.5vw, 1.05rem);
+    color: var(--ink-dim);
+    opacity: 0;
+    transition: opacity 1s ease 0.5s;
+  }
+  .letter-signature.shown { opacity: 1; }
+
+  .letter-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    border-top: 1px solid rgba(201,169,110,0.08);
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    transition: all 0.25s;
+  }
+  .ctrl-btn:hover { border-color: var(--gold); background: rgba(201,169,110,0.06); }
+  .ctrl-btn:disabled { opacity: 0.2; cursor: default; }
+
+  .skip-btn {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: color 0.25s;
+    padding: 0.5rem;
+  }
+  .skip-btn:hover { color: var(--ink-dim); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 2px;
+    background: var(--gold);
+    z-index: 100;
+    transition: width 0.1s linear;
+    width: 0%;
+  }
+
+  /* ── CLOSING SCREEN ── */
+  #screen-end {
+    text-align: center;
+    gap: 1.5rem;
+  }
+  .end-ornament {
+    color: var(--gold);
+    font-size: 1.5rem;
+    letter-spacing: 0.4em;
+  }
+  .end-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(2rem, 9vw, 3.2rem);
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .end-sub {
+    font-size: clamp(0.9rem, 3.5vw, 1rem);
+    font-style: italic;
+    color: var(--ink-dim);
+    line-height: 1.8;
+    max-width: 300px;
+  }
+  .end-restart {
+    margin-top: 0.5rem;
+    background: none;
+    border: 1px solid var(--gold-dim);
+    color: var(--ink-faint);
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    padding: 0.5rem 1.2rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.25s;
+  }
+  .end-restart:hover { border-color: var(--gold-dim); color: var(--ink-dim); }
+
+  /* ── FLICKER ANIMATION ── */
+  @keyframes flicker {
+    0%, 100% { opacity: 0.7; } 50% { opacity: 1; }
+  }
+  .cursor-blink {
+    display: inline-block;
+    width: 2px; height: 1em;
+    background: var(--gold);
+    vertical-align: text-bottom;
+    animation: flicker 1s infinite;
+    margin-left: 1px;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+<div class="progress-bar" id="progress"></div>
+
+<!-- OPENING SCREEN -->
+<div class="screen active" id="screen-open">
+  <p class="open-label">A message for you</p>
+  <h1 class="open-title">Three<br><em>Letters</em></h1>
+  <p class="open-sub">Written in the quiet hours when words feel more true than silence.</p>
+  <button class="open-btn" onclick="startLetters()">Open them ↓</button>
+</div>
+
+<!-- LETTER SCREEN -->
+<div class="screen" id="screen-letter">
+  <div class="letter-header">
+    <span class="letter-num" id="letter-num">Letter I</span>
+    <div class="letter-dots">
+      <div class="dot active" id="dot-0" onclick="jumpTo(0)"></div>
+      <div class="dot" id="dot-1" onclick="jumpTo(1)"></div>
+      <div class="dot" id="dot-2" onclick="jumpTo(2)"></div>
+    </div>
+  </div>
+
+  <div class="letter-body" id="letter-body">
+    <span class="letter-salutation" id="letter-sal"></span>
+    <span class="letter-text" id="letter-content"></span>
+    <span class="cursor-blink" id="cursor"></span>
+    <div class="letter-signature" id="letter-sig"></div>
+  </div>
+
+  <div class="letter-footer">
+    <button class="ctrl-btn" id="btn-prev" onclick="prevLetter()" disabled>← Prev</button>
+    <button class="skip-btn" id="btn-skip" onclick="skipReveal()">skip</button>
+    <button class="ctrl-btn" id="btn-next" onclick="nextLetter()" disabled>Next →</button>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="screen-end">
+  <div class="end-ornament">✦ ✦ ✦</div>
+  <h2 class="end-title">All of me,<br>always.</h2>
+  <p class="end-sub">You've read every word. Every one of them was meant for you, and only you.</p>
+  <button class="end-restart" onclick="restart()">Read again</button>
+</div>
+
+<script>
+const LETTERS = [
+  {
+    num: 'Letter I',
+    salutation: 'Dear Beautiful,',
+    body: `When someone truly loves you, you won't have to beg for clarity.
+You won't have to decode silence. You won't have to shrink your needs. You won't have to keep making excuses for why they cannot show up.
+
+Because when people want to get to you, they do.
+
+They rearrange. They communicate. They make the call. They find the time. They move the mountain, or at least start climbing it.
+
+Love is not confusion dressed up as patience.
+
+Love is not waiting around while someone decides whether you are worth effort.
+
+The right person may not be perfect, but they will not leave you starving on mixed signals and calling it hope.
+
+When someone loves you, you feel it in their consistency.
+
+And when they don't?
+
+You feel that too.`,
+    signature: '— All of Me'
+  },
+  {
+    num: 'Letter II',
+    salutation: 'A lot.',
+    body: `This is going to be less flattering and more concerning, actually.
+Some would call it obsession.
+I call it… exploring and collecting data from an unexplored dimension.
+
+Did you think this was going to be cute? Oh, darling. You're going to regret asking. I can't even tell you my full truth. You'd run from me if I ever sent such thoughts into the open air.
+
+You haven't got a clue. You know how thorough I get in my research.
+
+You're inescapable to me. You overwhelm me with data. There's so much to process at all times, and I desperately, frantically hoard as much as I can. Like the bloody sun, you follow me around even when we're continents apart, still blinding me and making me feel warm. Your heat is abundant, yet somehow I always need to soak up more.
+
+And in the night, you turn into the moon. Soft, glowing, and the only one I can see in the dark. Comforting and calm, your gravity commands the tides and flow of my mind. But you're so greedy… or I'm too generous, and you direct all the currents back to you.
+
+As if it couldn't get any worse, my thoughts about you outnumber the stars. All of them are beautiful, even if some cause me to implode. They span a galaxy, and I think about everything from your skin on mine to the little creatures you see on your walks. They all swirl within me, a cosmos that makes alternate universes my imagination dips into when you're missing from me.
+
+You make me feel alien to myself. A creature so lost, so foreign to what the ground feels like after soaring in the high your voice, thoughts, and presence alone give me. I've landed on a strange planet and I don't know if it'll destroy me or become my new home.
+
+You've become everything as I know it. From the water I drink to the food I consume, I see you, hear you, feel you. You've become every atom and molecule that animates me.
+
+You have no idea how I've crafted my atmosphere to resemble you. An invisible shield and force that I carry with me wherever I go.
+
+I couldn't live without it. It's necessary for me to breathe, you see?
+
+So, again, you asked how much I think about you?
+
+Perhaps I'd like to change my answer.
+
+I don't think about you at all.
+
+You are already a world with life that simply lives within me.`,
+    signature: ''
+  },
+  {
+    num: 'Letter III',
+    salutation: '',
+    body: `It's you that I want
+In the most quiet and gentle ways
+I want you like how it was in the beginning
+
+Maybe let's not try to recreate that
+If we are able to evolve together
+I think that love will expand
+
+The arms length distance is double.
+We once were together hand in hand side by side
+but we didn't let each other feel
+and we both stiff armed each other
+
+That tension could cut a knife you know
+
+But I want you to do the honors
+I want you to want to do it
+
+Because you already know
+
+that I would.`,
+    signature: ''
+  }
+];
+
+// Stars
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+let stars = [];
+function initStars() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  stars = Array.from({length: 120}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.2 + 0.2,
+    a: Math.random(),
+    speed: Math.random() * 0.003 + 0.001
+  }));
+}
+function drawStars() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  stars.forEach(s => {
+    s.a += s.speed;
+    const alpha = (Math.sin(s.a) + 1) / 2 * 0.6 + 0.1;
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(201,169,110,${alpha})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+initStars();
+drawStars();
+window.addEventListener('resize', initStars);
+
+// State
+let currentLetter = 0;
+let charIndex = 0;
+let revealTimer = null;
+let isRevealing = false;
+let unlockedLetters = [true, false, false];
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startLetters() {
+  showScreen('screen-letter');
+  loadLetter(0);
+}
+
+function loadLetter(idx) {
+  if (revealTimer) clearInterval(revealTimer);
+  currentLetter = idx;
+  charIndex = 0;
+  isRevealing = true;
+
+  const letter = LETTERS[idx];
+  document.getElementById('letter-num').textContent = letter.num;
+  document.getElementById('letter-sal').textContent = letter.salutation;
+
+  const content = document.getElementById('letter-content');
+  content.innerHTML = '';
+  const sig = document.getElementById('letter-sig');
+  sig.textContent = letter.signature;
+  sig.classList.remove('shown');
+
+  const cursor = document.getElementById('cursor');
+  cursor.style.display = 'inline-block';
+
+  // Update dots
+  [0,1,2].forEach(i => {
+    const d = document.getElementById('dot-' + i);
+    d.classList.toggle('active', i === idx);
+  });
+
+  // Prev/Next
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = true;
+
+  const chars = letter.body.split('');
+  const total = chars.length;
+
+  // Build char spans
+  chars.forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'char';
+    span.textContent = ch;
+    content.appendChild(span);
+  });
+
+  const spans = content.querySelectorAll('.char');
+  const progressEl = document.getElementById('progress');
+
+  const SPEED = 28; // ms per char
+
+  revealTimer = setInterval(() => {
+    if (charIndex >= spans.length) {
+      clearInterval(revealTimer);
+      isRevealing = false;
+      cursor.style.display = 'none';
+      if (letter.signature) sig.classList.add('shown');
+      document.getElementById('btn-next').disabled = false;
+      unlockedLetters[idx] = true;
+      progressEl.style.width = '100%';
+      return;
+    }
+    spans[charIndex].classList.add('shown');
+    charIndex++;
+    progressEl.style.width = (charIndex / spans.length * 100) + '%';
+
+    // Auto-scroll
+    const body = document.getElementById('letter-body');
+    const lastSpan = spans[charIndex - 1];
+    if (lastSpan) {
+      const rect = lastSpan.getBoundingClientRect();
+      const bodyRect = body.getBoundingClientRect();
+      if (rect.bottom > bodyRect.bottom - 40) {
+        body.scrollTop += 40;
+      }
+    }
+  }, SPEED);
+}
+
+function skipReveal() {
+  if (!isRevealing) return;
+  clearInterval(revealTimer);
+  isRevealing = false;
+
+  const content = document.getElementById('letter-content');
+  content.querySelectorAll('.char').forEach(s => s.classList.add('shown'));
+  document.getElementById('cursor').style.display = 'none';
+
+  const sig = document.getElementById('letter-sig');
+  const letter = LETTERS[currentLetter];
+  if (letter.signature) sig.classList.add('shown');
+
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('progress').style.width = '100%';
+  unlockedLetters[currentLetter] = true;
+
+  // Scroll to bottom
+  const body = document.getElementById('letter-body');
+  setTimeout(() => { body.scrollTop = body.scrollHeight; }, 50);
+}
+
+function nextLetter() {
+  if (currentLetter < LETTERS.length - 1) {
+    document.getElementById('progress').style.width = '0%';
+    document.getElementById('letter-body').scrollTop = 0;
+    loadLetter(currentLetter + 1);
+  } else {
+    showScreen('screen-end');
+  }
+}
+
+function prevLetter() {
+  if (currentLetter > 0) {
+    document.getElementById('progress').style.width = '0%';
+    document.getElementById('letter-body').scrollTop = 0;
+    loadLetter(currentLetter - 1);
+  }
+}
+
+function jumpTo(idx) {
+  if (idx > currentLetter && !unlockedLetters[idx] && isRevealing) return;
+  document.getElementById('progress').style.width = '0%';
+  document.getElementById('letter-body').scrollTop = 0;
+  loadLetter(idx);
+}
+
+function restart() {
+  unlockedLetters = [true, false, false];
+  showScreen('screen-open');
+  document.getElementById('progress').style.width = '0%';
+}
+</script>
+</body>
+</html>
