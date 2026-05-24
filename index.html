@@ -229,6 +229,27 @@
     width: 0%;
   }
 
+  /* ── SITE CREDIT ── */
+  .site-credit {
+    position: fixed;
+    bottom: 0.9rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    font-family: 'IM Fell English', serif;
+    font-style: italic;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.3s, opacity 0.5s;
+  }
+  .site-credit:hover { color: var(--gold-dim); }
+  body:has(#screen-letter.active) .site-credit {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   /* ── CLOSING SCREEN ── */
   #screen-end {
     text-align: center;
@@ -287,6 +308,7 @@
 
 <canvas id="stars"></canvas>
 <div class="progress-bar" id="progress"></div>
+<a class="site-credit" href="https://www.facebook.com/sifucat" target="_blank" rel="noopener noreferrer">made by sifu</a>
 
 <!-- OPENING SCREEN -->
 <div class="screen active" id="screen-open">
