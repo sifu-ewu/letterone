@@ -350,11 +350,7 @@
 <div class="screen" id="screen-letter">
   <div class="letter-header">
     <span class="letter-num" id="letter-num">Letter I</span>
-    <div class="letter-dots">
-      <div class="dot active" id="dot-0" onclick="jumpTo(0)"></div>
-      <div class="dot" id="dot-1" onclick="jumpTo(1)"></div>
-      <div class="dot" id="dot-2" onclick="jumpTo(2)"></div>
-    </div>
+    <div class="letter-dots" id="letter-dots"></div>
   </div>
 
   <div class="letter-body" id="letter-body">
@@ -417,9 +413,13 @@ You haven't got a clue. You know how thorough I get in my research.
 
 You're inescapable to me. You overwhelm me with data. There's so much to process at all times, and I desperately, frantically hoard as much as I can. Like the bloody sun, you follow me around even when we're continents apart, still blinding me and making me feel warm. Your heat is abundant, yet somehow I always need to soak up more.
 
-And in the night, you turn into the moon. Soft, glowing, and the only one I can see in the dark. Comforting and calm, your gravity commands the tides and flow of my mind. But you're so greedy… or I'm too generous, and you direct all the currents back to you.
-
-As if it couldn't get any worse, my thoughts about you outnumber the stars. All of them are beautiful, even if some cause me to implode. They span a galaxy, and I think about everything from your skin on mine to the little creatures you see on your walks. They all swirl within me, a cosmos that makes alternate universes my imagination dips into when you're missing from me.
+And in the night, you turn into the moon. Soft, glowing, and the only one I can see in the dark. Comforting and calm, your gravity commands the tides and flow of my mind. But you're so greedy… or I'm too generous, and you direct all the currents back to you.`,
+    signature: ''
+  },
+  {
+    num: 'Letter II',
+    salutation: '',
+    body: `As if it couldn't get any worse, my thoughts about you outnumber the stars. All of them are beautiful, even if some cause me to implode. They span a galaxy, and I think about everything from your skin on mine to the little creatures you see on your walks. They all swirl within me, a cosmos that makes alternate universes my imagination dips into when you're missing from me.
 
 You make me feel alien to myself. A creature so lost, so foreign to what the ground feels like after soaring in the high your voice, thoughts, and presence alone give me. I've landed on a strange planet and I don't know if it'll destroy me or become my new home.
 
@@ -508,8 +508,22 @@ let currentLetter = 0;
 let charIndex = 0;
 let revealTimer = null;
 let isRevealing = false;
-let unlockedLetters = [true, false, false];
+let unlockedLetters = LETTERS.map((_, i) => i === 0);
 let letterFits = true;
+
+// Build one navigation dot per letter/page.
+function buildDots() {
+  const wrap = document.getElementById('letter-dots');
+  wrap.innerHTML = '';
+  LETTERS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.id = 'dot-' + i;
+    d.addEventListener('click', () => jumpTo(i));
+    wrap.appendChild(d);
+  });
+}
+buildDots();
 
 // Shrink the letter text until it fits the visible area (no scrolling).
 // Returns true if it fits; false for letters too long even at the minimum size.
@@ -568,9 +582,9 @@ function loadLetter(idx) {
   cursor.style.display = 'inline-block';
 
   // Update dots
-  [0,1,2].forEach(i => {
+  LETTERS.forEach((_, i) => {
     const d = document.getElementById('dot-' + i);
-    d.classList.toggle('active', i === idx);
+    if (d) d.classList.toggle('active', i === idx);
   });
 
   // Prev/Next
@@ -677,7 +691,7 @@ function jumpTo(idx) {
 }
 
 function restart() {
-  unlockedLetters = [true, false, false];
+  unlockedLetters = LETTERS.map((_, i) => i === 0);
   showScreen('screen-open');
   document.getElementById('progress').style.width = '0%';
 }
